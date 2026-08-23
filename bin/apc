@@ -1,0 +1,476 @@
+#!/bin/sh
+# apc — agent-policy mechanics.
+#
+# Deliberately knows nothing about rules, packs, frameworks, or detection. It
+# copies, symlinks, hashes, splices, and diffs. Adding a rule or a stack must
+# never require editing this file. See docs/adr/0001 and docs/adr/0003.
+#
+# Layout convention (the only thing apc knows):
+#   packs/<pack>/core.md          -> spliced into <target>/AGENTS.md
+#   packs/<pack>/skill/<name>/    -> <target>/.agents/skills/<name>/
+#                                    + <target>/.claude/skills/<name> symlink
+
+set -eu
+
+VERSION="1"
+MARK_OPEN_PREFIX="<!-- agent-policy:core"
+MARK_CLOSE="<!-- /agent-policy:core -->"
+LOCK_REL=".agents/agent-policy.lock.json"
+
+TARGET="."
+SOURCE=""
+REF=""
+RESOLVED=""
+ORIGIN=""
+BRIDGE="copy"
+
+die() { printf 'apc: %s\n' "$*" >&2; exit 1; }
+note() { printf '%s\n' "$*"; }
+
+hash_file() {
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 "$1" | cut -d' ' -f1
+  elif command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | cut -d' ' -f1
+  else
+    die "no sha256 tool found (need shasum or sha256sum)"
+  fi
+}
+
+hash_stdin() {
+  if command -v shasum >/dev/null 2>&1; then
+    shasum -a 256 | cut -d' ' -f1
+  else
+    sha256sum | cut -d' ' -f1
+  fi
+}
+
+lock_path() { printf '%s/%s' "$TARGET" "$LOCK_REL"; }
+
+# Emit "path<TAB>sha256<TAB>status" for every file entry in the lockfile.
+lock_entries() {
+  lp=$(lock_path)
+  [ -f "$lp" ] || return 0
+  sed -n 's/.*"path": "\([^"]*\)", "sha256": "\([^"]*\)", "status": "\([^"]*\)".*/\1	\2	\3/p' "$lp"
+}
+
+lock_field() {
+  lp=$(lock_path)
+  [ -f "$lp" ] || return 0
+  sed -n "s/.*\"$1\": \"\([^\"]*\)\".*/\1/p" "$lp" | head -1
+}
+
+# Content of the core block in AGENTS.md, marker lines excluded.
+extract_block() {
+  [ -f "$1" ] || return 0
+  awk -v o="$MARK_OPEN_PREFIX" -v c="$MARK_CLOSE" '
+    index($0, o) == 1 { f = 1; next }
+    index($0, c) == 1 { f = 0; next }
+    f { print }
+  ' "$1"
+}
+
+# Replace the marked region of $1 with the contents of $2, or append if absent.
+splice_block() {
+  agents=$1; body=$2; open_line=$3
+  tmp="${agents}.apc.tmp"
+  [ -f "$agents" ] || : > "$agents"
+  awk -v body="$body" -v o="$MARK_OPEN_PREFIX" -v c="$MARK_CLOSE" \
+      -v openline="$open_line" '
+    function emit(  line) {
+      print openline
+      while ((getline line < body) > 0) print line
+      close(body)
+      print c
+    }
+    index($0, o) == 1 { emit(); done = 1; f = 1; next }
+    index($0, c) == 1 { f = 0; next }
+    f { next }
+    { print }
+    END { if (!done) { if (NR > 0) print ""; emit() } }
+  ' "$agents" > "$tmp"
+  mv "$tmp" "$agents"
+}
+
+copy_tree() {
+  src=$1; dst=$2
+  rm -rf "$dst"
+  mkdir -p "$(dirname "$dst")"
+  cp -R "$src" "$dst"
+  find "$dst" -name '.DS_Store' -delete 2>/dev/null || true
+}
+
+# Copy a skill tree, but restore any file the lockfile marks forked. ADR-0007:
+# update never silently discards a deliberate local edit.
+sync_skill() {
+  src=$1; name=$2
+  dst="$TARGET/.agents/skills/$name"
+  bak=""
+  if [ -d "$dst" ]; then
+    bak="$TARGET/.agents/.apc-bak"
+    rm -rf "$bak"; cp -R "$dst" "$bak"
+  fi
+  copy_tree "$src" "$dst"
+  [ -n "$bak" ] || return 0
+  lock_entries | while IFS='	' read -r p _ st; do
+    [ "$st" = "forked" ] || continue
+    case "$p" in ".agents/skills/$name/"*) ;; *) continue ;; esac
+    sub=${p#".agents/skills/$name/"}
+    if [ -f "$bak/$sub" ]; then
+      mkdir -p "$(dirname "$dst/$sub")"
+      cp "$bak/$sub" "$dst/$sub"
+      printf '  kept forked  %s\n' "$p"
+    fi
+  done
+  rm -rf "$bak"
+}
+
+# Claude Code reads only .claude/skills. Every other harness reads .agents/
+# natively, so this is a one-way mirror of a canonical tree. Copies are the
+# default: git checks a committed symlink out as a text file on Windows unless
+# core.symlinks is enabled per machine, which silently hides the skill. See
+# ADR-0002.
+bridge_claude() {
+  name=$1
+  src="$TARGET/.agents/skills/$name"
+  dst="$TARGET/.claude/skills/$name"
+  mkdir -p "$TARGET/.claude/skills"
+  rm -rf "$dst"
+  if [ "$BRIDGE" = "link" ]; then
+    ln -sfn "../../.agents/skills/$name" "$dst"
+  else
+    cp -R "$src" "$dst"
+  fi
+}
+
+# Mark the mirror as generated so review tools collapse it.
+write_gitattributes() {
+  ga="$TARGET/.gitattributes"
+  line=".claude/skills/** linguist-generated=true"
+  [ -f "$ga" ] || : > "$ga"
+  grep -qF "$line" "$ga" && return 0
+  printf '%s\n' "$line" >> "$ga"
+  note "  marked .claude/skills/** generated in .gitattributes"
+}
+
+ensure_claude_md() {
+  f="$TARGET/CLAUDE.md"
+  if [ ! -f "$f" ]; then
+    printf '@AGENTS.md\n' > "$f"
+    note "  created CLAUDE.md (@AGENTS.md)"
+  elif ! grep -q '^@AGENTS\.md[[:space:]]*$' "$f"; then
+    tmp="$f.apc.tmp"
+    { printf '@AGENTS.md\n\n'; cat "$f"; } > "$tmp"
+    mv "$tmp" "$f"
+    note "  prepended @AGENTS.md to CLAUDE.md"
+  fi
+}
+
+status_of() {
+  want=$1
+  lock_entries | while IFS='	' read -r p _ s; do
+    [ "$p" = "$want" ] && { printf '%s' "$s"; break; }
+  done
+}
+
+# ---------------------------------------------------------------- sync
+
+cmd_sync() {
+  [ -n "$SOURCE" ] || die "sync needs --source <collection checkout>"
+  [ -d "$SOURCE/packs" ] || die "no packs/ under $SOURCE"
+  [ $# -gt 0 ] || die "sync needs at least one pack name"
+  mkdir -p "$TARGET/.agents/skills"
+
+  blockparts="$TARGET/.agents/.apc-block.tmp"
+  : > "$blockparts"
+  packlist=""
+  skilllist=""
+
+  for pack in "$@"; do
+    pdir="$SOURCE/packs/$pack"
+    [ -d "$pdir" ] || die "unknown pack: $pack"
+    packlist="$packlist $pack"
+
+    if [ -f "$pdir/core.md" ]; then
+      cat "$pdir/core.md" >> "$blockparts"
+      note "core   $pack"
+    fi
+
+    if [ -d "$pdir/skill" ]; then
+      for sd in "$pdir/skill"/*; do
+        [ -d "$sd" ] || continue
+        name=$(basename "$sd")
+        sync_skill "$sd" "$name"
+        skilllist="$skilllist $name"
+        note "skill  $name"
+      done
+    fi
+  done
+
+  for name in $skilllist; do
+    bridge_claude "$name"
+  done
+  [ "$BRIDGE" = "copy" ] && write_gitattributes
+
+  # bin/apc travels with the install so update/check work without re-cloning.
+  mkdir -p "$TARGET/.agents/bin"
+  cp "$SOURCE/bin/apc" "$TARGET/.agents/bin/apc"
+  chmod +x "$TARGET/.agents/bin/apc"
+
+  corest=$(status_of "AGENTS.md#agent-policy:core")
+  if [ "$corest" = "forked" ]; then
+    note "  kept forked  AGENTS.md#agent-policy:core"
+  elif [ -s "$blockparts" ]; then
+    bh=$(hash_file "$blockparts")
+    open_line="$MARK_OPEN_PREFIX ${REF:-unpinned} sha256:$(printf '%s' "$bh" | cut -c1-12) -->"
+    splice_block "$TARGET/AGENTS.md" "$blockparts" "$open_line"
+    note "  spliced core block into AGENTS.md"
+  fi
+  rm -f "$blockparts"
+
+  ensure_claude_md
+  write_lock "$packlist" "$skilllist"
+  note ""
+  note "wrote $LOCK_REL"
+}
+
+write_lock() {
+  packlist=$1; skilllist=$2
+  lp=$(lock_path)
+  tmp="$lp.apc.tmp"
+  ent="$TARGET/.agents/.apc-entries-new.tmp"
+  mkdir -p "$(dirname "$lp")"
+  : > "$ent"
+
+  if [ -f "$TARGET/AGENTS.md" ] && grep -q "$MARK_CLOSE" "$TARGET/AGENTS.md"; then
+    bh=$(extract_block "$TARGET/AGENTS.md" | hash_stdin)
+    st=$(status_of "AGENTS.md#agent-policy:core"); st=${st:-tracked}
+    printf '    { "path": "AGENTS.md#agent-policy:core", "sha256": "%s", "status": "%s" }\n' \
+      "$bh" "$st" >> "$ent"
+  fi
+
+  for name in $skilllist; do
+    trees="$TARGET/.agents/skills/$name"
+    [ "$BRIDGE" = "copy" ] && trees="$trees $TARGET/.claude/skills/$name"
+    find $trees -type f | sort | while read -r f; do
+      rel=${f#"$TARGET"/}
+      h=$(hash_file "$f")
+      st=$(status_of "$rel"); st=${st:-tracked}
+      printf '    { "path": "%s", "sha256": "%s", "status": "%s" }\n' "$rel" "$h" "$st" >> "$ent"
+    done
+  done
+
+  origin_val=${ORIGIN:-$(lock_field origin)}
+
+  {
+    printf '{\n'
+    printf '  "lockfileVersion": %s,\n' "$VERSION"
+    printf '  "origin": "%s",\n' "$origin_val"
+    printf '  "ref": "%s",\n' "${REF:-unpinned}"
+    printf '  "resolved": "%s",\n' "${RESOLVED:-}"
+    printf '  "bridge": "%s",\n' "$BRIDGE"
+    printf '  "installedAt": "%s",\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    printf '  "packs": ['
+    first=1
+    for p in $packlist; do
+      [ $first -eq 1 ] || printf ', '
+      printf '"%s"' "$p"; first=0
+    done
+    printf '],\n'
+    printf '  "files": [\n'
+    awk 'NR > 1 { print prev "," } { prev = $0 } END { if (NR) print prev }' "$ent"
+    printf '  ]\n}\n'
+  } > "$tmp"
+
+  mv "$tmp" "$lp"
+  rm -f "$ent"
+}
+
+# ---------------------------------------------------------------- check
+
+cmd_check() {
+  lp=$(lock_path)
+  [ -f "$lp" ] || die "no lockfile at $LOCK_REL — not an installed project"
+
+  drift=0; missing=0; forked=0; ok=0; broken=0
+
+  # A symlink bridge that git materialised as a text file is the Windows
+  # failure mode: Claude Code finds a file where it expects a directory and
+  # the skill silently vanishes from the list. Name it explicitly.
+  bridge=$(lock_field bridge); bridge=${bridge:-link}
+  if [ "$bridge" = "link" ] && [ -d "$TARGET/.claude/skills" ]; then
+    for l in "$TARGET"/.claude/skills/*; do
+      [ -e "$l" ] || [ -L "$l" ] || continue
+      n=$(basename "$l")
+      if [ -L "$l" ]; then
+        [ -d "$l" ] || {
+          note "BROKEN   .claude/skills/$n  symlink does not resolve"
+          broken=$((broken+1)); }
+      elif [ -f "$l" ]; then
+        note "BROKEN   .claude/skills/$n  is a text file, not a link"
+        note "         git checked the symlink out as text, so this skill is"
+        note "         invisible to Claude Code. Either enable core.symlinks on"
+        note "         this machine and re-checkout, or re-sync with --copies."
+        broken=$((broken+1))
+      fi
+    done
+  fi
+
+  lock_entries > "$TARGET/.agents/.apc-entries.tmp"
+
+  while IFS='	' read -r p want st; do
+    [ -n "$p" ] || continue
+    if [ "$p" = "AGENTS.md#agent-policy:core" ]; then
+      if [ ! -f "$TARGET/AGENTS.md" ] || ! grep -q "$MARK_CLOSE" "$TARGET/AGENTS.md"; then
+        note "MISSING  $p"; missing=$((missing+1)); continue
+      fi
+      got=$(extract_block "$TARGET/AGENTS.md" | hash_stdin)
+    else
+      if [ ! -f "$TARGET/$p" ]; then
+        note "MISSING  $p"; missing=$((missing+1)); continue
+      fi
+      got=$(hash_file "$TARGET/$p")
+    fi
+
+    if [ "$st" = "forked" ]; then
+      note "FORKED   $p"; forked=$((forked+1))
+    elif [ "$got" = "$want" ]; then
+      ok=$((ok+1))
+    else
+      case "$p" in
+        .claude/skills/*)
+          note "DRIFT    $p  (mirror — edit the .agents/ copy instead)" ;;
+        *) note "DRIFT    $p" ;;
+      esac
+      drift=$((drift+1))
+    fi
+  done < "$TARGET/.agents/.apc-entries.tmp"
+  rm -f "$TARGET/.agents/.apc-entries.tmp"
+
+  note ""
+  note "$ok tracked, $drift drifted, $forked forked, $missing missing, $broken broken"
+  [ "$drift" -eq 0 ] && [ "$missing" -eq 0 ] && [ "$broken" -eq 0 ]
+}
+
+# ---------------------------------------------------------------- diff
+
+cmd_diff() {
+  [ -n "$SOURCE" ] || die "diff needs --source <collection checkout>"
+  lp=$(lock_path)
+  [ -f "$lp" ] || die "no lockfile at $LOCK_REL"
+
+  changed=0
+  lock_entries > "$TARGET/.agents/.apc-entries.tmp"
+  while IFS='	' read -r p _ st; do
+    [ -n "$p" ] || continue
+    case "$p" in
+      .agents/skills/*) ;;
+      *) continue ;;
+    esac
+    rest=${p#.agents/skills/}
+    name=${rest%%/*}
+    sub=${rest#*/}
+    up=""
+    for pk in "$SOURCE"/packs/*/skill/"$name"/"$sub"; do
+      [ -f "$pk" ] && up="$pk"
+    done
+    if [ -z "$up" ]; then
+      note "REMOVED  $p"; changed=$((changed+1)); continue
+    fi
+    if ! cmp -s "$up" "$TARGET/$p"; then
+      note "CHANGED  $p${st:+  ($st)}"; changed=$((changed+1))
+    fi
+  done < "$TARGET/.agents/.apc-entries.tmp"
+  rm -f "$TARGET/.agents/.apc-entries.tmp"
+
+  note ""
+  note "$changed file(s) differ from $SOURCE"
+}
+
+# ---------------------------------------------------------------- fork
+
+cmd_fork() {
+  [ $# -eq 1 ] || die "fork needs exactly one path"
+  set_status "$1" forked && note "marked forked: $1"
+}
+
+cmd_unfork() {
+  [ $# -eq 1 ] || die "unfork needs exactly one path"
+  set_status "$1" tracked && note "marked tracked: $1"
+}
+
+set_status() {
+  lp=$(lock_path)
+  [ -f "$lp" ] || die "no lockfile at $LOCK_REL"
+  grep -q "\"path\": \"$1\"" "$lp" || die "not in lockfile: $1"
+  tmp="$lp.apc.tmp"
+  esc=$(printf '%s' "$1" | sed 's/[\/&]/\\&/g')
+  sed "s/\(\"path\": \"$esc\", \"sha256\": \"[^\"]*\", \"status\": \)\"[^\"]*\"/\1\"$2\"/" "$lp" > "$tmp"
+  mv "$tmp" "$lp"
+}
+
+# ---------------------------------------------------------------- list
+
+cmd_list() {
+  lp=$(lock_path)
+  [ -f "$lp" ] || die "no lockfile at $LOCK_REL"
+  note "origin   $(lock_field origin)"
+  note "ref      $(lock_field ref)"
+  note "resolved $(lock_field resolved)"
+  note "bridge   $(lock_field bridge)"
+  note ""
+  lock_entries | while IFS='	' read -r p _ s; do
+    printf '  %-8s %s\n' "$s" "$p"
+  done
+}
+
+usage() {
+  cat <<'USAGE'
+apc — agent-policy mechanics
+
+  apc sync   --source DIR [--target DIR] [--ref TAG] [--resolved SHA]
+             [--origin URL] [--symlinks] PACK...
+                                        install or update the named packs
+             --symlinks bridges .claude/skills with links instead of copies.
+             Only for a repo where every contributor is on macOS or Linux:
+             git checks a committed symlink out as a text file on Windows
+             unless core.symlinks is enabled on that machine.
+  apc check  [--target DIR]              verify installed files against the lock
+  apc diff   --source DIR [--target DIR] show which installed files differ
+  apc fork   PATH                        stop tracking a file on update
+  apc unfork PATH                        resume tracking it
+  apc list   [--target DIR]              show what is installed
+
+Exit status: check and diff exit non-zero when there is drift.
+USAGE
+}
+
+[ $# -gt 0 ] || { usage; exit 2; }
+CMD=$1; shift
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --source)   SOURCE=$2; shift 2 ;;
+    --target)   TARGET=$2; shift 2 ;;
+    --ref)      REF=$2; shift 2 ;;
+    --resolved) RESOLVED=$2; shift 2 ;;
+    --origin)   ORIGIN=$2; shift 2 ;;
+    --symlinks) BRIDGE="link"; shift ;;
+    --copies)   BRIDGE="copy"; shift ;;
+    -h|--help)  usage; exit 0 ;;
+    --) shift; break ;;
+    -*) die "unknown option: $1" ;;
+    *) break ;;
+  esac
+done
+
+case "$CMD" in
+  sync)   cmd_sync "$@" ;;
+  check)  cmd_check ;;
+  diff)   cmd_diff ;;
+  fork)   cmd_fork "$@" ;;
+  unfork) cmd_unfork "$@" ;;
+  list)   cmd_list ;;
+  help|-h|--help) usage ;;
+  *) die "unknown command: $CMD" ;;
+esac
