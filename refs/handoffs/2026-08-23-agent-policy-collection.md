@@ -15,18 +15,23 @@ Read these first — they are the design, and this document does not repeat them
 
 ## Where things stand
 
-Nothing is committed. `git status` shows every file as untracked against the
-single `initial commit`. There is **no git remote**, and `README.md` hardcodes
-`https://github.com/IlhomMax/agent-policy-collection` — confirm that name before
-publishing, because the origin URL is baked into every consuming project's
-lockfile.
+Committed in seven commits on `main`, working tree clean. The remote is
+`git@github.com:parnasmi/agent-policy-collection.git`.
 
-Three steps remain before the system does anything for anyone:
+`README.md` gives agents the **HTTPS** clone URL deliberately, not the SSH one:
+that URL is what `install` writes into every consuming project's lockfile as
+`origin`, and `update` re-clones from it. HTTPS works for anyone on a public
+repo; SSH would require every teammate to have keys configured. Change it in
+both `README.md` and this file if the repository ever moves or goes private.
 
-1. Create the GitHub repo and push.
-2. `git tag v1.0.0`. `update` resolves to the latest tag; an untagged repo
-   reaches nobody.
-3. Install into a real project to exercise it.
+Two steps remain before the system does anything for anyone:
+
+1. Push, and confirm the repo is **public** — a private repo breaks the
+   bootstrap for teammates.
+2. `git tag v1.0.0 && git push --tags`. `update` resolves to the latest tag; an
+   untagged repo is installable but never updatable.
+
+Then install into a real project to exercise it.
 
 ## The two things that must not break
 

@@ -12,7 +12,7 @@ You were probably handed this URL and asked to set up a project. Do this:
 
 ```sh
 DIR=$(mktemp -d)
-git clone --quiet https://github.com/IlhomMax/agent-policy-collection "$DIR"
+git clone --quiet https://github.com/parnasmi/agent-policy-collection.git "$DIR"
 TAG=$(git -C "$DIR" describe --tags --abbrev=0 2>/dev/null || echo main)
 git -C "$DIR" checkout --quiet "$TAG"
 ```

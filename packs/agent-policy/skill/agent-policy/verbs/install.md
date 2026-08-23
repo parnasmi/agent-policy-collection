@@ -78,6 +78,12 @@ repo, or a layer tree you cannot classify. Never ask what `package.json` answers
   agent-policy core frontend docs-explorer
 ```
 
+`$ORIGIN` is the URL this Collection was cloned from — use the **HTTPS** form,
+`https://github.com/parnasmi/agent-policy-collection.git`, not the SSH one. It is
+written into the lockfile and is what `update` re-clones from on every machine,
+including those of teammates who have no SSH key configured. Getting it wrong
+bakes a URL nobody else can reach into the project.
+
 The mirror into `.claude/skills` is real copies by default. Pass `--symlinks`
 only if every contributor to this repo is on macOS or Linux — on Windows git
 checks a committed symlink out as a text file unless `core.symlinks` is enabled
