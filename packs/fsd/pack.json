@@ -1,0 +1,18 @@
+{
+  "name": "fsd",
+  "title": "Feature-Sliced Design rules",
+  "tier": "skill",
+  "status": "empty",
+  "skills": ["fsd-rules"],
+  "description": "Layer boundaries, slice public API, where new code goes, cross-imports. Not yet seeded — see SEED.md.",
+  "detect": {
+    "anyDirectory": [
+      "src/shared",
+      "src/entities",
+      "src/features",
+      "src/widgets"
+    ],
+    "note": "Detection is a hint only. The developer runs a customised FSD, so the layer set must be read from the tree and confirmed, never assumed from feature-sliced.design."
+  },
+  "requires": ["core", "frontend"]
+}

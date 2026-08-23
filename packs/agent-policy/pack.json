@@ -1,0 +1,13 @@
+{
+  "name": "agent-policy",
+  "title": "Policy maintenance",
+  "tier": "skill",
+  "status": "populated",
+  "skills": ["agent-policy"],
+  "description": "The install, update, check, capture, seed, and harden verbs. Vendored into every consuming project so maintenance works without re-cloning.",
+  "detect": {
+    "always": true,
+    "note": "Mandatory. Installed first and never skipped."
+  },
+  "requires": []
+}

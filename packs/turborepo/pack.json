@@ -1,0 +1,13 @@
+{
+  "name": "turborepo",
+  "title": "Turborepo and workspace map",
+  "tier": "skill",
+  "status": "empty",
+  "skills": ["turborepo-rules"],
+  "description": "Task graph, package boundaries, dependency placement, and the workspace map that routes a workspace path to the rules that apply there. Not yet seeded — see SEED.md.",
+  "detect": {
+    "anyFile": ["turbo.json"],
+    "note": "Per ADR-0004 a monorepo gets a single root install; this pack's workspace map is how per-app variation is expressed."
+  },
+  "requires": ["core", "frontend"]
+}

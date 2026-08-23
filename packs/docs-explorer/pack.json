@@ -1,0 +1,13 @@
+{
+  "name": "docs-explorer",
+  "title": "Documentation lookup",
+  "tier": "skill",
+  "status": "populated",
+  "skills": ["docs-explorer"],
+  "description": "Fetches current documentation for libraries and frameworks, in an isolated context where the harness supports one.",
+  "detect": {
+    "always": true,
+    "note": "Useful in every project. Install unless the developer declines."
+  },
+  "requires": []
+}

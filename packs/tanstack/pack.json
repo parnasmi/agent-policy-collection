@@ -1,0 +1,18 @@
+{
+  "name": "tanstack",
+  "title": "TanStack rules",
+  "tier": "skill",
+  "status": "empty",
+  "skills": ["tanstack-rules"],
+  "description": "Query keys, caching and invalidation, mutations, router loaders, typed search params, table state. Not yet seeded — see SEED.md.",
+  "detect": {
+    "anyDependency": [
+      "@tanstack/react-query",
+      "@tanstack/react-router",
+      "@tanstack/react-table",
+      "@tanstack/react-start"
+    ],
+    "note": "When detected but unseeded, report it and offer `/agent-policy seed tanstack`. Do not install an empty skill."
+  },
+  "requires": ["core", "frontend"]
+}
