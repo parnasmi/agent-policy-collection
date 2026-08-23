@@ -1,0 +1,13 @@
+{
+  "name": "nextjs",
+  "title": "Next.js rules",
+  "tier": "skill",
+  "status": "populated",
+  "skills": ["nextjs-rules"],
+  "description": "Server and client boundaries, server-side secrets, framework primitives, URL state, and App Router data fetching.",
+  "detect": {
+    "anyDependency": ["next"],
+    "note": "Requires the frontend pack, which still governs every component in a Next.js app."
+  },
+  "requires": ["core", "frontend"]
+}

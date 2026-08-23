@@ -1,0 +1,13 @@
+{
+  "name": "frontend",
+  "title": "Frontend craft rules",
+  "tier": "skill",
+  "status": "populated",
+  "skills": ["frontend-rules"],
+  "description": "React and TypeScript craft rules — effects, derived state, hooks, memoization, component shape, types, async, errors, data boundaries, testing, accessibility, security, dependencies, code quality.",
+  "detect": {
+    "anyDependency": ["react"],
+    "note": "Install for any React project, including Next.js and React Native. This is the base pack every other frontend pack sits on top of."
+  },
+  "requires": ["core"]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "core",
+  "title": "Universal development rules",
+  "tier": "core",
+  "always": true,
+  "status": "populated",
+  "description": "Restraint, evidence, and verification rules that apply to every diff. Inlined into the consuming project's AGENTS.md.",
+  "detect": null,
+  "requires": []
+}
