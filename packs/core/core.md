@@ -8,7 +8,9 @@ Task-specific craft rules are **not** here. They live in skills under
 `.agents/skills/*-rules/`, whose `SKILL.md` is a table mapping what you are
 touching to the rule file that covers it. Consult the matching skills before
 writing code: `general-rules` for craft in any stack, plus the stack's own skill
-for React, Next.js, TanStack, or architecture-layer code.
+for React, Next.js, TanStack, or architecture-layer code. Before adding a rule, a
+calculation, request state, or an outside call to a handler, controller,
+consumer, job, page, or component, also read `design-guide`.
 
 ### Scope restraint
 
@@ -95,7 +97,9 @@ primitives rather than creating a parallel one.
 **[RULE_ABSTRACTION_RESTRAINT] — HIGH**
 Do not abstract for hypothetical future requirements. Clear duplication beats the
 wrong abstraction when reuse is uncertain. Abstract when there is a concrete
-repeated concept, not merely code that looks similar.
+repeated concept, not merely code that looks similar. This limits generality,
+not placement: giving a new rule or calculation its own function at its first
+use is not an abstraction.
 
 **[RULE_ROOT_CAUSE] — HIGH**
 Fix the underlying cause, not the symptom. Do not paper over a problem with

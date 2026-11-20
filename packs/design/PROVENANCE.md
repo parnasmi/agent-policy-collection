@@ -23,7 +23,7 @@ guide; one run per scenario, Sonnet and Haiku.
 
 | Heuristic | Baseline failure |
 | --- | --- |
-| New logic gets its own unit | Asked to add a discount to an existing route handler, the model inlined the lookup and the maths into the handler. `RULE_MINIMAL_CHANGE` read as "put it where you are"; the rule was removed from core in v2.0.0 for this. |
+| New logic gets its own unit | Asked to add a discount to an existing route handler, the model inlined the lookup and the maths into the handler. `RULE_MINIMAL_CHANGE` read as "put it where you are"; the rule was removed from core in v2.0.0 for this, and the failure stayed (see below). |
 | A new edge only translates | Asked for a pay route, both models wrote one handler of about sixty lines: validation, queries, discount maths, and Stripe and Twilio SDK calls. |
 | Components render; hooks decide | Asked to add error and retry to a page that fetches in an effect, the model grew request state, a retry counter, and the fetch inside the page. |
 | SDKs and libraries sit behind a module you own | The pay route imported the Stripe and Twilio SDKs into the handler; a relative-time label imported dayjs and registered its plugin inside a presentational component. |
@@ -34,6 +34,25 @@ table, a Kafka consumer with SendGrid) that failed without it. Simple tasks — 
 typo, a formatter, a plain read route, local input state — gained no layers.
 "Logic the edge already held stays there" was added after Haiku moved existing
 handler lines into a new core function.
+
+## Reaching the guide
+
+Rerun on v2.0.0, 2026-11-20, two runs each on Sonnet and Haiku: the discount in
+the existing handler, error and retry in a page that fetches in an effect, and a
+commission rule in a Feature-Sliced Design widget. With `core` only, the first
+two failed in all four runs, as in the 2026-11-19 baseline, and three runs still
+said they applied "smallest change" with that rule gone. With the skill list in
+view, the agents loaded this guide in every task and all twelve passed. The fix
+is the guide; what can fail is reaching it.
+
+A description-only trigger test with the v2.0.0 pointer found the guide 9 of 9
+times on Sonnet, twice, and 7 of 9 on Haiku, which missed a loading spinner and a
+Retry button on a page. In v2.0.1 the pointer in `core.md` names this guide for
+logic added to a handler, controller, consumer, job, page, or component. Haiku
+then found it for the spinner in both runs. Retry still went to `tanstack-query`,
+a skill from the test environment. Over-application checks passed with and
+without skills: a typo, a cents formatter, an access check, a plain read route,
+and local input state.
 
 ## Candidates — not shipped
 
