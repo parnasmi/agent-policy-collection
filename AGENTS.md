@@ -1,6 +1,7 @@
 # AGENTS.md — working on the Collection
 
-This repository is the upstream source of agent policy for frontend projects.
+This repository is the upstream source of agent policy for frontend and
+full-stack projects.
 It is content, not an application: markdown rules, plus one small script that
 moves them. See [README.md](README.md) for what it does and
 [CONTEXT.md](CONTEXT.md) for what the words mean.
@@ -30,6 +31,10 @@ not a plausible concern — something a model actually did. Record it in the pac
 `PROVENANCE.md` in the same commit. A rule nobody can trace to a failure is a
 rule competing for context without earning it, and provenance is what makes that
 prunable later.
+
+A guide skill holds heuristics, not rules, so this invariant does not reach it.
+Record its sources in the pack's `PROVENANCE.md` instead, and promote a
+heuristic to a rule only once a model has actually failed that way.
 
 ## Adding a rule
 

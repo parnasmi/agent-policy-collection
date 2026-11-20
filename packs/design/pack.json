@@ -1,0 +1,13 @@
+{
+  "name": "design",
+  "title": "Design guide",
+  "tier": "skill",
+  "status": "populated",
+  "skills": ["design-guide"],
+  "description": "Software design heuristics that hold in any stack — where logic belongs, what a unit should know, module and API shape, and when not to apply a principle.",
+  "detect": {
+    "always": true,
+    "note": "Universal: language- and framework-agnostic. Install in every project unless the developer declines."
+  },
+  "requires": ["core"]
+}

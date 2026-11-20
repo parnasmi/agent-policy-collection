@@ -1,9 +1,9 @@
 # Agent Policy Collection
 
 A public repository of LLM development rules, skills, and subagents for frontend
-projects, vendored into consuming projects by an agent and kept in sync with a
-lockfile. Harness-agnostic: Claude Code, Codex, opencode, Antigravity, and Pi all
-read the same installed content.
+and full-stack projects, vendored into consuming projects by an agent and kept in
+sync with a lockfile. Harness-agnostic: Claude Code, Codex, opencode, Antigravity,
+and Pi all read the same installed content.
 
 ## Language
 
@@ -14,14 +14,14 @@ This repository — the upstream source of all rules, packs, skills, and subagen
 _Avoid_: library, registry, template repo
 
 **Consuming project**:
-A frontend repository that has had policy content installed into it.
+A frontend or full-stack repository that has had policy content installed into it.
 _Avoid_: target repo, client project, downstream
 
 ### Units of content
 
 **Pack**:
-The smallest independently installable unit of policy. A pack is either the core
-pack or a stack pack, and is selected as a whole — never partially.
+The smallest independently installable unit of policy. A pack is the core pack, a
+stack pack, or a universal pack, and is selected as a whole — never partially.
 _Avoid_: module, bundle, plugin, preset
 
 **Core pack**:
@@ -35,6 +35,11 @@ A pack installed only when the consuming project uses that stack. The roster is
 as a router skill.
 _Avoid_: domain pack, framework pack, optional pack
 
+**Universal pack**:
+A pack installed in every consuming project whatever its stack, because its
+content holds in any language. The roster is `design`. Ships as a router skill.
+_Avoid_: global pack, default pack
+
 **Rule**:
 One named, bracketed directive with a severity, e.g. `[RULE_NAME_STABILITY]`.
 The atom of policy; rules are authored once and never duplicated across packs.
@@ -43,6 +48,14 @@ The atom of policy; rules are authored once and never duplicated across packs.
 A skill whose `SKILL.md` is a short "touching X → read Y" table rather than the
 rules themselves. The rules live in sibling files the agent reads on demand.
 _Avoid_: index skill, dispatcher
+
+**Guide skill**:
+A router skill whose sibling files hold heuristics instead of rules — each a
+signal, a question, a move, and when not to — with no rule IDs and no
+severities. It informs judgement and obliges nothing; anything an agent must do
+is a rule. Its sources are recorded in the pack's `PROVENANCE.md` in place of
+observed failures.
+_Avoid_: best-practice skill, handbook
 
 ### Installation
 

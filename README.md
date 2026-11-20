@@ -1,8 +1,8 @@
 # agent-policy-collection
 
-LLM development rules, skills, and subagents for frontend projects — vendored
-into a project once, then kept in sync with a lockfile. One installed copy serves
-Claude Code, Codex, opencode, Antigravity, and Pi.
+LLM development rules, skills, and subagents for frontend and full-stack
+projects — vendored into a project once, then kept in sync with a lockfile. One
+installed copy serves Claude Code, Codex, opencode, Antigravity, and Pi.
 
 ---
 
@@ -42,6 +42,7 @@ project/
         ├── agent-policy/         install · update · check · capture · seed · harden
         ├── frontend-rules/       React and TypeScript craft
         ├── nextjs-rules/         if it is a Next.js project
+        ├── design-guide/         design heuristics for any stack
         └── docs-explorer/        documentation lookup
     .claude/skills/*               mirror of the above, for Claude Code
 ```
@@ -76,6 +77,7 @@ A router skill's `SKILL.md` is a "touching X → read Y" table, not the rules. S
 | `core` | populated | always |
 | `agent-policy` | populated | always |
 | `docs-explorer` | populated | always, unless declined |
+| `design` | populated | always |
 | `frontend` | populated | `react` is a dependency |
 | `nextjs` | populated | `next` is a dependency |
 | `tanstack` | **empty** | detected → offers `seed` |
@@ -111,7 +113,7 @@ packs/<pack>/
   core.md            spliced into AGENTS.md          (core pack only)
   skill/<name>/      copied to .agents/skills/<name> (skill packs)
   SEED.md            the interview                   (empty packs)
-  PROVENANCE.md      why each rule exists — never vendored
+  PROVENANCE.md      why each rule exists, or a guide's sources — never vendored
 bin/apc              copy · symlink · hash · splice · diff. Nothing else.
 docs/adr/            why it is built this way
 CONTEXT.md           vocabulary
