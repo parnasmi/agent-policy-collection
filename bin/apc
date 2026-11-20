@@ -166,10 +166,12 @@ ensure_claude_md() {
   fi
 }
 
+# A path not in the lockfile prints nothing and still succeeds: callers run
+# under set -e, and a new file in an existing install is not an error.
 status_of() {
   want=$1
   lock_entries | while IFS='	' read -r p _ s; do
-    [ "$p" = "$want" ] && { printf '%s' "$s"; break; }
+    if [ "$p" = "$want" ]; then printf '%s' "$s"; break; fi
   done
 }
 
