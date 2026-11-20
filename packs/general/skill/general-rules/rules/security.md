@@ -10,7 +10,7 @@ is an open redirect. A URL rendered into `href` needs its scheme checked, or
 `javascript:` works.
 
 **[RULE_AUTHORIZATION] — CRITICAL**
-Hiding a button or a route in React is UX, not security. The data was already
+Hiding a button or a route in the UI is UX, not security. The data was already
 fetched, the route is still reachable, and the API still answers.
 
 Every sensitive operation is authorised at the trusted boundary — the server, the

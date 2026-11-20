@@ -9,8 +9,8 @@ moves them. See [README.md](README.md) for what it does and
 ## The rules that govern this repo
 
 Everything in [`packs/core/core.md`](packs/core/core.md) applies here too —
-smallest change, no renaming, no opportunistic refactoring, verify before
-claiming done. Read it. It is the product and it is also the policy.
+only what the task needs, no renaming, no opportunistic refactoring, verify
+before claiming done. Read it. It is the product and it is also the policy.
 
 ## Two invariants
 
@@ -44,8 +44,8 @@ drafts from the real diff and files the PR. By hand:
 1. **Tier.** Core only if it fires on every diff with no trigger word. Core costs
    context in every session in every project, so the bar is high. Otherwise a
    skill.
-2. **Pack.** `core` universal, `frontend` for React and TypeScript craft, the
-   stack packs for stack-specific.
+2. **Pack.** `core` universal, `general` for craft that holds in any stack,
+   `frontend` for React craft, the stack packs for stack-specific.
 3. **Write it** as `**[RULE_NAME] — SEVERITY**` plus two to five lines. Say what
    to do, not only what to avoid. Put the exemptions in the rule — an unqualified
    rule gets over-applied. Add `*Enforced by:*` when a lint rule covers it;
@@ -53,7 +53,8 @@ drafts from the real diff and files the PR. By hand:
 4. **Router row.** A rule file nothing points at will never be read.
 5. **Provenance.** In the same commit.
 6. **Tag a release.** Consuming projects resolve to the latest tag; an untagged
-   merge reaches nobody.
+   merge reaches nobody. A removed or moved rule is a major version, a new
+   rule or pack a minor, a wording change a patch.
 
 ## Adding a pack
 
@@ -69,7 +70,7 @@ No change to `bin/apc`. If you think you need one, re-read the first invariant.
 ```sh
 sh -n bin/apc                          # syntax
 DIR=$(mktemp -d) && mkdir -p "$DIR"
-./bin/apc sync --source . --target "$DIR" --ref test agent-policy core frontend
+./bin/apc sync --source . --target "$DIR" --ref test agent-policy core general frontend
 ./bin/apc check --target "$DIR"
 python3 -c "import json;json.load(open('$DIR/.agents/agent-policy.lock.json'))"
 ```

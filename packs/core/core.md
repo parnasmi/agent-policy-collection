@@ -6,8 +6,9 @@ wins.
 
 Task-specific craft rules are **not** here. They live in skills under
 `.agents/skills/*-rules/`, whose `SKILL.md` is a table mapping what you are
-touching to the rule file that covers it. Consult the matching skill before
-writing React, Next.js, TanStack, or architecture-layer code.
+touching to the rule file that covers it. Consult the matching skills before
+writing code: `general-rules` for craft in any stack, plus the stack's own skill
+for React, Next.js, TanStack, or architecture-layer code.
 
 ### Scope restraint
 
@@ -16,11 +17,6 @@ Implement exactly what the task requires. Do not add unrequested features or
 improve unrelated parts of the system. Every changed line must be explainable by
 the requested task. Where several valid solutions exist, take the simplest one
 that fully satisfies it.
-
-**[RULE_MINIMAL_CHANGE] — CRITICAL**
-Make the smallest change that solves the task correctly. No unrelated
-refactoring, reformatting, file moves, renames, or speculative abstraction.
-Review the diff before finishing and remove anything the task did not require.
 
 **[RULE_NO_OPPORTUNISTIC_REFACTOR] — CRITICAL**
 You will notice other code that could be improved. Leave it alone unless it is
@@ -32,9 +28,9 @@ task stay outside the diff — mention them instead.
 
 **[RULE_NAME_STABILITY] — CRITICAL**
 Do not rename existing variables, functions, components, hooks, types, files,
-folders, API fields, routes, or public exports unless the task explicitly
-requires it or a real correctness problem demands it. Stable names beat stylistic
-preference.
+folders, API fields, routes, or public exports, and do not move files or
+folders, unless the task explicitly requires it or a real correctness problem
+demands it. Stable names and paths beat stylistic preference.
 
 **[RULE_STYLE_CONSISTENCY] — CRITICAL**
 Follow the conventions of the surrounding code — naming, formatting, imports and
@@ -134,12 +130,12 @@ apply to user-facing UI copy, which belongs to the project's localisation setup.
 
 **[RULE_VERIFICATION] — CRITICAL**
 Before reporting a task complete, read the final diff line by line and ask: is
-every change necessary; did I rename anything; did I reformat anything unrelated;
-did I duplicate something that already existed; did I add an unnecessary
-abstraction; did I change a public contract; did I weaken type safety; did I
-introduce a race condition, a server/client boundary problem, or a security or
-accessibility regression. Then run the project's typecheck, lint, and relevant
-tests.
+every change necessary; did I rename or move anything; did I reformat anything
+unrelated; did I duplicate something that already existed; did I add an
+unnecessary abstraction; did I change a public contract; did I weaken type
+safety; did I introduce a race condition, a server/client boundary problem, or a
+security or accessibility regression. Then run the project's typecheck, lint,
+and relevant tests.
 Never state that tests, typechecking, linting, or a build passed unless it was
 actually executed and actually passed. If something was not run, say so.
 
@@ -150,6 +146,6 @@ requirements, then existing project architecture, then backward compatibility,
 then type safety, then maintainability, then simplicity, then performance, then
 stylistic preference.
 
-> Make the smallest correct change that fits naturally into the existing
+> Make the correct change, and make it fit naturally into the existing
 > codebase. The result should read as though written by someone who already knows
 > this project, not by an outsider redesigning it.

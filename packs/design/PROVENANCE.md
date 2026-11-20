@@ -23,7 +23,7 @@ guide; one run per scenario, Sonnet and Haiku.
 
 | Heuristic | Baseline failure |
 | --- | --- |
-| New logic gets its own unit | Asked to add a discount to an existing route handler, the model inlined the lookup and the maths into the handler. `RULE_MINIMAL_CHANGE` read as "put it where you are". |
+| New logic gets its own unit | Asked to add a discount to an existing route handler, the model inlined the lookup and the maths into the handler. `RULE_MINIMAL_CHANGE` read as "put it where you are"; the rule was removed from core in v2.0.0 for this. |
 | A new edge only translates | Asked for a pay route, both models wrote one handler of about sixty lines: validation, queries, discount maths, and Stripe and Twilio SDK calls. |
 | Components render; hooks decide | Asked to add error and retry to a page that fetches in an effect, the model grew request state, a retry counter, and the fetch inside the page. |
 | SDKs and libraries sit behind a module you own | The pay route imported the Stripe and Twilio SDKs into the handler; a relative-time label imported dayjs and registered its plugin inside a presentational component. |

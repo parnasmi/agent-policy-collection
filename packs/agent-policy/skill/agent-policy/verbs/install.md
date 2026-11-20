@@ -5,8 +5,9 @@ about things the repository can answer.
 
 ## 1. Refuse if already installed
 
-If `.agents/agent-policy.lock.json` exists, stop. This is `update`'s job — say so
-and offer it. Re-running install would discard fork markers.
+If `.agents/agent-policy.lock.json` exists, stop. This is `update`'s job, adding
+a pack included — say so and offer it. Re-running install would discard fork
+markers.
 
 ## 2. Detect
 
@@ -50,7 +51,9 @@ Detected
 
 Will install
   core            → AGENTS.md core block
+  general         → .agents/skills/general-rules
   frontend        → .agents/skills/frontend-rules
+  design          → .agents/skills/design-guide
   docs-explorer   → .agents/skills/docs-explorer
   agent-policy    → .agents/skills/agent-policy
 
@@ -75,7 +78,7 @@ repo, or a layer tree you cannot classify. Never ask what `package.json` answers
 ```sh
 "$DIR/bin/apc" sync --source "$DIR" --target . \
   --ref "$TAG" --resolved "$SHA" --origin "$ORIGIN" \
-  agent-policy core frontend docs-explorer
+  agent-policy core general frontend design docs-explorer
 ```
 
 `$ORIGIN` is the URL this Collection was cloned from — use the **HTTPS** form,

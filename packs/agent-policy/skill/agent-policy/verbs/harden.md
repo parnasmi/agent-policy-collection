@@ -62,4 +62,4 @@ which is the normal case for most of the interesting rules, and not a gap.
 Adding `jsx-a11y` to a mature codebase surfaces hundreds of existing violations.
 Say what enabling something would cost before proposing it, and let the developer
 decide. If they ask you to enable something, that is a separate task under the
-ordinary rules — smallest change, no opportunistic cleanup.
+ordinary rules — only what the task needs, no opportunistic cleanup.

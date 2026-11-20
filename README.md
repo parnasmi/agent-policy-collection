@@ -40,7 +40,8 @@ project/
     ├── bin/apc                   so update and check work offline
     └── skills/
         ├── agent-policy/         install · update · check · capture · seed · harden
-        ├── frontend-rules/       React and TypeScript craft
+        ├── general-rules/        craft rules for any stack
+        ├── frontend-rules/       React craft
         ├── nextjs-rules/         if it is a Next.js project
         ├── design-guide/         design heuristics for any stack
         └── docs-explorer/        documentation lookup
@@ -76,8 +77,9 @@ A router skill's `SKILL.md` is a "touching X → read Y" table, not the rules. S
 | --- | --- | --- |
 | `core` | populated | always |
 | `agent-policy` | populated | always |
+| `general` | populated | always, unless declined; required by `frontend` |
+| `design` | populated | always, unless declined |
 | `docs-explorer` | populated | always, unless declined |
-| `design` | populated | always |
 | `frontend` | populated | `react` is a dependency |
 | `nextjs` | populated | `next` is a dependency |
 | `tanstack` | **empty** | detected → offers `seed` |
@@ -127,7 +129,7 @@ editing it.
 
 ```
 /agent-policy install     detect the stack, choose packs, write everything
-/agent-policy update      pull a newer release, showing the diff first
+/agent-policy update      pull a newer release or add a pack, diff first
 /agent-policy check       verify installed files against the lockfile
 /agent-policy capture     turn an observed failure into a rule, as a PR here
 /agent-policy seed <pack> fill an empty pack from this repo's conventions

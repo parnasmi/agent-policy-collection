@@ -1,0 +1,13 @@
+{
+  "name": "general",
+  "title": "General craft rules",
+  "tier": "skill",
+  "status": "populated",
+  "skills": ["general-rules"],
+  "description": "Craft rules that hold in any stack — types and runtime validation, signatures and constants, overlapping async requests, errors, external data, testing, security, dependencies, code quality.",
+  "detect": {
+    "always": true,
+    "note": "Universal. Install in every project unless the developer declines. A pack that requires it, such as frontend, makes it mandatory."
+  },
+  "requires": ["core"]
+}

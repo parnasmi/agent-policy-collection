@@ -1,7 +1,7 @@
 # update
 
-Pull a newer Collection release. Nothing is written before the developer has
-seen what changes.
+Pull a newer Collection release, or add a pack to this install. Nothing is
+written before the developer has seen what changes.
 
 ## 1. Check for drift first
 
@@ -20,10 +20,22 @@ be dropped from the pack set.
 
 ## 2. Resolve the new release
 
-Clone per the shared setup. Compare `TAG` with `ref` in the lockfile. If equal,
-say so and stop — there is nothing to do.
+Clone per the shared setup. Compare `TAG` with `ref` in the lockfile. If equal
+and no pack is being added, say so and stop — there is nothing to do.
 
-## 3. Show what changes
+## 3. Resolve the pack set
+
+Start from `packs` in the lockfile — never re-detect. Add:
+
+- every pack the developer named for this update;
+- every pack that a pack in the set `requires` in the new release, repeated
+  until nothing new arrives. A release can add a requirement, so read
+  `requires` from `$DIR/packs/*/pack.json`, not from memory.
+
+Add a pack only if its `status` is `populated`; an empty one gets the `seed`
+offer instead, as in `install`.
+
+## 4. Show what changes
 
 ```sh
 .agents/bin/apc diff --source "$DIR"
@@ -46,23 +58,27 @@ diff -u <(sed -n '/<!-- agent-policy:core/,/<!-- \/agent-policy:core -->/p' AGEN
         "$DIR/packs/core/core.md"
 ```
 
+`apc diff` covers only files already in the lockfile. Name each pack step 3
+added, the skill it brings, and why it arrives: named, or required by which
+pack.
+
 Summarise in prose: rules added, rules changed, rules removed. A removed rule
-matters most — say which one and that it will stop applying.
+matters most — say which one and that it will stop applying. A `REMOVED` file
+may have moved to another pack: search `$DIR/packs` for its rule IDs, and call a
+rule moved, not removed, when the new pack set carries it.
 
-## 4. Apply
+## 5. Apply
 
-On confirmation, sync the **same pack set the lockfile already records** — read
-`packs` from the lockfile rather than re-detecting. Adding a pack is a separate,
-explicit request.
+On confirmation, sync the pack set from step 3:
 
 ```sh
 "$DIR/bin/apc" sync --source "$DIR" --target . \
-  --ref "$TAG" --resolved "$SHA" $(packs from lockfile)
+  --ref "$TAG" --resolved "$SHA" <pack set from step 3>
 ```
 
 Then `apc check` to confirm, and report the new ref.
 
-## 5. Handling drift from step 1
+## 6. Handling drift from step 1
 
 For each drifted file, show three things — the local version, the version the
 lockfile says was installed, and the incoming upstream version — then offer:

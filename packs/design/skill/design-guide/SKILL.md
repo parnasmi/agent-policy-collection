@@ -15,8 +15,7 @@ unit.
 
 **Scope.** Apply them to code you write and to code the task already changes. A
 design smell in code the task does not touch gets one line in your report, not
-an edit — `[RULE_NO_OPPORTUNISTIC_REFACTOR]`. `[RULE_MINIMAL_CHANGE]` limits how
-much existing code you rewrite; it does not decide where new code lives.
+an edit — `[RULE_NO_OPPORTUNISTIC_REFACTOR]`.
 
 **Precedence.** `AGENTS.md`, the project's own skills, and the conventions
 already in the codebase outrank this guide. Where the project names its layers,

@@ -1,6 +1,6 @@
 ---
 name: agent-policy
-description: Install, update, verify, and extend this project's agent policy from the agent-policy-collection. Run as `/agent-policy <verb>` where verb is install, update, check, capture, seed, or harden. Use when asked to set up agent rules, refresh them, record a new rule, seed a stack pack, or audit which rules are mechanically enforced.
+description: Install, update, verify, and extend this project's agent policy from the agent-policy-collection. Run as `/agent-policy <verb>` where verb is install, update, check, capture, seed, or harden. Use when asked to set up agent rules, refresh them, add a pack, record a new rule, seed a stack pack, or audit which rules are mechanically enforced.
 disable-model-invocation: true
 ---
 
@@ -12,7 +12,7 @@ developer did not ask for.
 | Verb | Does | Read |
 | --- | --- | --- |
 | `install` | First-time setup: detect the stack, choose packs, write everything | [verbs/install.md](verbs/install.md) |
-| `update` | Pull a newer Collection release, showing what changes first | [verbs/update.md](verbs/update.md) |
+| `update` | Pull a newer Collection release or add a pack, showing what changes first | [verbs/update.md](verbs/update.md) |
 | `check` | Verify installed files against the lockfile | [verbs/check.md](verbs/check.md) |
 | `capture` | Turn an observed model failure into a rule, as a PR upstream | [verbs/capture.md](verbs/capture.md) |
 | `seed` | Fill in an empty stack pack from this repository's conventions | [verbs/seed.md](verbs/seed.md) |

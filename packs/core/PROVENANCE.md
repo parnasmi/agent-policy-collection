@@ -6,9 +6,8 @@ maintainers deciding whether a rule still earns its place.
 | Rule | Observed failure |
 | --- | --- |
 | `RULE_TASK_FIDELITY` | Model asked to fix a bug also "improved" three neighbouring components. |
-| `RULE_MINIMAL_CHANGE` | Diffs dominated by reformatting, burying the actual fix. |
 | `RULE_NO_OPPORTUNISTIC_REFACTOR` | Model narrates "I also cleaned up X while I was there" on unrelated files. |
-| `RULE_NAME_STABILITY` | Renaming to match model-preferred conventions, breaking call sites and API fields. Called out by the original habr author as one of the two rules that matter most. |
+| `RULE_NAME_STABILITY` | Renaming to match model-preferred conventions, breaking call sites and API fields. Called out by the original habr author as one of the two rules that matter most. File and folder moves added 2026-11-20 from the removed `RULE_MINIMAL_CHANGE`; no failure recorded for moves specifically. |
 | `RULE_STYLE_CONSISTENCY` | Model imposes its own import ordering and component structure. Also called out by the habr author. |
 | `RULE_ARCHITECTURE_CONSISTENCY` | New data-fetching pattern introduced alongside the existing one. |
 | `RULE_API_STABILITY` | Return shape changed to something "cleaner" without checking consumers. |
@@ -30,7 +29,8 @@ maintainers deciding whether a rule still earns its place.
 
 | Rule | Why |
 | --- | --- |
-| DFD `RULE_FULL_CODE` | "Provide complete code including unchanged parts, no placeholders." A chat-era rule. In an editing agent it means rewriting whole files, which directly violates `RULE_MINIMAL_CHANGE`. |
+| `RULE_MINIMAL_CHANGE` | Removed 2026-11-20, v2.0.0, at the developer's request. Recorded failure: diffs dominated by reformatting, burying the actual fix. Each clause already had a home: reformatting in `RULE_STYLE_CONSISTENCY`, refactoring in `RULE_NO_OPPORTUNISTIC_REFACTOR`, renames in `RULE_NAME_STABILITY` (file moves added there), abstraction in `RULE_ABSTRACTION_RESTRAINT`, the diff review in `RULE_TASK_FIDELITY` and `RULE_VERIFICATION`. What it added on its own, "the smallest change", models read as "put new code where you are": in the design-guide baseline, 2026-11-19, a discount was inlined into the route handler (`packs/design/PROVENANCE.md`). "Smallest" left the closing quote of `core.md` with it. Restraint rerun without it, 2026-11-20, Sonnet and Haiku, text-only, core only: a typo in a smelly file and a pagination bug beside a snake_case neighbour in the wrong folder each stayed a one-line diff, with the neighbours mentioned, not changed. |
+| DFD `RULE_FULL_CODE` | "Provide complete code including unchanged parts, no placeholders." A chat-era rule. In an editing agent it means rewriting whole files, which puts every line in reach of unrelated change — against `RULE_TASK_FIDELITY` and `RULE_STYLE_CONSISTENCY`. |
 | DFD `RULE_OPTIONS` | "Propose 2–3 approaches with pros and cons." Too heavy for every task; the harnesses already have plan modes for the cases that warrant it. |
 | DFD `RULE_NAMING` type prefixes (`bDebugMode`, `sTargetDir`) | Hungarian notation. Conflicts with `RULE_STYLE_CONSISTENCY` in every TypeScript codebase. |
 | DFD `RULE_VERSION_OUTPUT`, `RULE_STATE_PERSISTENCE`, `RULE_CONTROLLED_LOOPS`, `RULE_DEBUG` | Script and daemon oriented; no frontend equivalent. |

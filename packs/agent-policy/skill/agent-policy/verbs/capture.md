@@ -30,8 +30,9 @@ a near-duplicate.
 - **skill** if there is a recognisable trigger — "I am writing an effect", "I am
   adding a test". This is where almost everything belongs.
 
-**Pack**: `frontend` for React and TypeScript craft; `nextjs`, `tanstack`, `fsd`,
-`turborepo` for stack-specific; `core` for universal.
+**Pack**: `general` for craft that holds in any stack; `frontend` for React
+craft; `nextjs`, `tanstack`, `fsd`, `turborepo` for stack-specific; `core` for
+universal.
 
 **Severity**: CRITICAL if violating it breaks correctness, security, or a
 contract. HIGH if it reliably produces worse code. MEDIUM for preference.

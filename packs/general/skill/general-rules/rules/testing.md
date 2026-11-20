@@ -6,8 +6,8 @@ internal implementation details, private state, exact internal call sequences, o
 fragile markup structure — a test that breaks under a safe refactor is costing
 you more than it protects.
 
-Query the way a user finds things: by role, label, and text, not by class name or
-component internals.
+In a UI test, query the way a user finds things: by role, label, and text, not
+by class name or component internals.
 
 **[RULE_TEST_CHANGES] — HIGH**
 When fixing a bug, add or update a test that fails before the fix and passes

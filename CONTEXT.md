@@ -31,13 +31,15 @@ _Avoid_: base rules, global rules
 
 **Stack pack**:
 A pack installed only when the consuming project uses that stack. The roster is
-`frontend`, `nextjs`, `tanstack`, `fsd`, `turborepo`, `docs-explorer`. Each ships
-as a router skill.
+`frontend`, `nextjs`, `tanstack`, `fsd`, `turborepo`. Each ships as a router
+skill.
 _Avoid_: domain pack, framework pack, optional pack
 
 **Universal pack**:
 A pack installed in every consuming project whatever its stack, because its
-content holds in any language. The roster is `design`. Ships as a router skill.
+content holds in any language — unless the developer declines it. A universal
+pack that another installed pack requires cannot be declined. The roster is
+`general`, `design`, `docs-explorer`. Each ships as a skill.
 _Avoid_: global pack, default pack
 
 **Rule**:
